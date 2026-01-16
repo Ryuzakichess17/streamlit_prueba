@@ -7,7 +7,7 @@ import altair as alt
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="Dashboard Avance y Ranking",
+    page_title="Dashboard Avance Enero y Ranking",
     layout="wide"
 )
 
@@ -16,8 +16,8 @@ st.set_page_config(
 # =========================
 @st.cache_data(ttl=3600)  # se refresca cada hora
 def cargar_data():
-    ruta_script = os.path.dirname(os.path.abspath(__file__))
-    ruta = os.path.join(ruta_script, "avance.xlsx")
+    ruta_base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ruta = os.path.join(ruta_base, "avance_real.xlsx")
     return pd.read_excel(ruta, dtype={"HC": str})
 
 df = cargar_data()
@@ -106,16 +106,16 @@ def kpi(col, title, value):
 
 kpi(c1, "👥 Participantes", f"{len(df_filt):,}")
 kpi(c2, "🏆 Ganadores", f"{df_filt['Ganadores'].sum():,}")
-kpi(c3, "📈 Avance PP", f"{df_filt['Avance PP Total'].mean()*100:.1f}%")
-kpi(c4, "📊 Avance SS", f"{df_filt['Avance SS Total'].mean()*100:.1f}%")
-kpi(c5, "⚡ Avance Eqv", f"{df_filt['Avance Eqv Total'].mean()*100:.1f}%")
+kpi(c3, "📈 Avance PP", f"{df_filt['Avance PP Ene'].mean()*100:.1f}%")
+kpi(c4, "📊 Avance SS", f"{df_filt['Avance SS Ene'].mean()*100:.1f}%")
+kpi(c5, "⚡ Avance Eqv", f"{df_filt['Avance Eqv Ene'].mean()*100:.1f}%")
 
 st.divider()
 
 # =========================
-# 🏆 RANKING POR PROYECCIÓN TOTAL
+# 🏆 RANKING POR PROYECCIÓN ENE
 # =========================
-st.subheader("🏆 Ranking por Proyección Total")
+st.subheader("🏆 Ranking por Proyección Enero")
 
 df_rank = (
     df_filt
@@ -144,8 +144,8 @@ def ranking_medalla(x):
 df_rank["Ranking 🏅"] = df_rank["Ranking"].apply(ranking_medalla)
 
 # Porcentajes visuales
-df_rank["Avance Eqv Total %"] = (df_rank["Avance Eqv Total"] * 100).round(1).astype(str) + "%"
-df_rank["Avance PP Total %"]  = (df_rank["Avance PP Total"]  * 100).round(1).astype(str) + "%"
+df_rank["Avance Eqv Ene %"] = (df_rank["Avance Eqv Ene"] * 100).round(1).astype(str) + "%"
+df_rank["Avance PP Ene %"]  = (df_rank["Avance PP Ene"]  * 100).round(1).astype(str) + "%"
 
 # Columnas finales
 cols_rank = [
@@ -154,10 +154,10 @@ cols_rank = [
     "NOMBRE",
     "DEPARTAMENTO",
     "CLUSTER",
-    "Avance Eqv Total %",
-    "Avance PP Total %",
-    "PROY TOTAL PP",
-    "PROY TOTAL SS"
+    "Avance Eqv Ene %",
+    "Avance PP Ene %",
+    "AVANCE ENE PP",
+    "AVANCE ENE SS"
 ]
 
 st.dataframe(
@@ -174,30 +174,30 @@ st.subheader("📍 Avance por Departamento (Resumen General)")
 df_dep = (
     df.groupby("DEPARTAMENTO", as_index=False)
     .agg(
-        Avance_PP_Total=("Avance PP Total", "mean"),
-        Avance_SS_Total=("Avance SS Total", "mean"),
-        Avance_Eqv_Total=("Avance Eqv Total", "mean")
+        Avance_PP_Ene=("Avance PP Ene", "mean"),
+        Avance_SS_Ene=("Avance SS Ene", "mean"),
+        Avance_Eqv_Ene=("Avance Eqv Ene", "mean")
     )
 )
 
 # Ordenar por Equivalente (descendente)
-df_dep = df_dep.sort_values("Avance_Eqv_Total", ascending=False)
+df_dep = df_dep.sort_values("Avance_Eqv_Ene", ascending=False)
 
 # Formato porcentaje
-for col in ["Avance_PP_Total", "Avance_SS_Total", "Avance_Eqv_Total"]:
+for col in ["Avance_PP_Ene", "Avance_SS_Ene", "Avance_Eqv_Ene"]:
     df_dep[col] = (df_dep[col] * 100).round(1)
 
 styled_dep = (
     df_dep
     .style
     .format({
-        "Avance_PP_Total": "{:.1f}%",
-        "Avance_SS_Total": "{:.1f}%",
-        "Avance_Eqv_Total": "{:.1f}%"
+        "Avance_PP_Ene": "{:.1f}%",
+        "Avance_SS_Ene": "{:.1f}%",
+        "Avance_Eqv_Ene": "{:.1f}%"
     })
     .background_gradient(
         cmap="RdYlGn",
-        subset=["Avance_Eqv_Total"]
+        subset=["Avance_Eqv_Ene"]
     )
     .set_properties(**{
         "text-align": "center"
